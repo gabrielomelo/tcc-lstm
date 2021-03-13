@@ -26,24 +26,27 @@ class SVMPreProcess:
         with open(file_path, 'r') as fp:
             temp = json.load(fp)
         random.shuffle(temp)
-        self.base_dataset = temp[:math.floor(len(temp)*self.database_size)]
+        self.base_dataset = temp[:math.floor(len(temp) * self.database_size)]
 
     def transform_sentiment(self):
         dataset_size = len(self.base_dataset)
         for i in range(0, dataset_size):
             if (i + 1) / dataset_size <= self.train_prop:
-                self.corpus_test['corpus'].append(self.base_dataset[i]['content'])
-                self.corpus_test['y'].append(int(self.base_dataset[i]['sentimentalClassification']))
-            else:
                 self.corpus_training['corpus'].append(self.base_dataset[i]['content'])
                 self.corpus_training['y'].append(int(self.base_dataset[i]['sentimentalClassification']))
+            else:
+                self.corpus_test['corpus'].append(self.base_dataset[i]['content'])
+                self.corpus_test['y'].append(int(self.base_dataset[i]['sentimentalClassification']))
+        return self
 
     def vectorize_dataset(self):
         self.corpus_training['corpus'] = self.vectorizer.fit_transform(
             self.corpus_training['corpus'], self.corpus_training['y']
         )
         self.corpus_test['corpus'] = self.vectorizer.transform(self.corpus_test['corpus'])
+        return self
 
     def truncate(self):
-        self.corpus_training['corpus'] = self.svd.transform(self.corpus_training['corpus'])
+        self.corpus_training['corpus'] = self.svd.fit_transform(self.corpus_training['corpus'])
         self.corpus_test['corpus'] = self.svd.transform(self.corpus_test['corpus'])
+        return self
