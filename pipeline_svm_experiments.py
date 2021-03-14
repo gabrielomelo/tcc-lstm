@@ -2,12 +2,14 @@ import pickle
 from svm.pre_process import SVMPreProcess
 from svm.classifier import SVMClassifier
 
+
+output_path = r'..\svm_classifier_50_stemmed.p'
 dataset_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\v2\pre-process-sentiment\sliced_sentiment\sliced_stemmed_sentiments.txt'
 database_size = 0.25
-n_dimensions = 25
+n_dimensions = 75
 train_prop = 0.7
 tolerance = 0.001
-_ds_size_override = 100
+_ds_size_override = None
 
 pre_process = SVMPreProcess(dataset_path, database_size, n_dimensions, train_prop, ds_size_override=_ds_size_override)
 
@@ -28,5 +30,5 @@ print('Tempo classificação: ', svm_classifier.classify_time)
 print('Precisão: ', svm_classifier.precision)
 
 print('Acabou a classificação')
-with open('../svm_classifier_25_stemmed.p', 'wb+') as fp:
+with open(output_path, 'wb+') as fp:
     pickle.dump(svm_classifier, fp)
