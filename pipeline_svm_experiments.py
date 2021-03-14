@@ -3,7 +3,7 @@ from svm.pre_process import SVMPreProcess
 from svm.classifier import SVMClassifier
 
 
-output_path = r'..\svm_classifier_50_stemmed.p'
+output_path = r'..\svm_classifier_75_stemmed.p'
 dataset_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\v2\pre-process-sentiment\sliced_sentiment\sliced_stemmed_sentiments.txt'
 database_size = 0.25
 n_dimensions = 75
