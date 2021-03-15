@@ -3,10 +3,10 @@ from svm.pre_process import SVMPreProcess
 from svm.classifier import SVMClassifier
 
 
-output_path = r'..\svm_classifier_75_stemmed.p'
+output_path = r'..\svm_classifier_300_stemmed.p'
 dataset_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\v2\pre-process-sentiment\sliced_sentiment\sliced_stemmed_sentiments.txt'
 database_size = 0.25
-n_dimensions = 75
+n_dimensions = 300
 train_prop = 0.7
 tolerance = 0.001
 _ds_size_override = None
@@ -23,11 +23,12 @@ svm_classifier.train()
 print('Acabou o treinamento, iniciou a classificação', pre_process.corpus_test['corpus'].shape)
 svm_classifier.classify()
 
-
 print('Tempo treino: ', svm_classifier.train_time)
 print('Tempo classificação: ', svm_classifier.classify_time)
-
 print('Precisão: ', svm_classifier.precision)
+print('Revocação: ', svm_classifier.recall)
+print('Acurácia: ', svm_classifier.accuracy)
+print('F1 Score: ', svm_classifier.f1)
 
 print('Acabou a classificação')
 with open(output_path, 'wb+') as fp:
