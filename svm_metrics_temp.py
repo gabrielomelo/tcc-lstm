@@ -1,7 +1,7 @@
 import pickle
 from svm.classifier import SVMClassifier
 
-with open('../fitted_classifiers/svm_classifier_200_stemmed.p', 'rb') as fp:
+with open('../fitted_classifiers/svm_classifier_300_stemmed.p', 'rb') as fp:
     svm_classifier = pickle.load(fp)
 
 results = svm_classifier.get_results()
