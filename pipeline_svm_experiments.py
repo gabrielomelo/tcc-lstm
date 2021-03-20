@@ -1,5 +1,5 @@
 import pickle
-from svm.pre_process import SVMPreProcess
+from svm.vectorizer import SVMVectorizer
 from svm.classifier import SVMClassifier
 
 
@@ -11,7 +11,7 @@ train_prop = 0.7
 tolerance = 0.001
 _ds_size_override = None
 
-pre_process = SVMPreProcess(dataset_path, database_size, n_dimensions, train_prop, ds_size_override=_ds_size_override)
+pre_process = SVMVectorizer(dataset_path, database_size, n_dimensions, train_prop, ds_size_override=_ds_size_override)
 
 pre_process.transform_sentiment().vectorize_dataset().truncate().scale_dataset()
 
@@ -30,6 +30,6 @@ print('Revocação: ', svm_classifier.recall)
 print('Acurácia: ', svm_classifier.accuracy)
 print('F1 Score: ', svm_classifier.f1)
 
-print('Acabou a classificação')
+print('Salvando o modelo.')
 with open(output_path, 'wb+') as fp:
     pickle.dump(svm_classifier, fp)

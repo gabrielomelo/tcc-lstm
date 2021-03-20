@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import TruncatedSVD
 
 
-class SVMPreProcess:
+class SVMVectorizer:
     def __init__(self, file_path: str, database_size=0.5,
                  n_dimensions=25, train_prop=0.7, ds_size_override=None):
         self.base_dataset = None
