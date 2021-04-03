@@ -9,6 +9,14 @@ from sklearn.decomposition import TruncatedSVD
 class SVMVectorizer:
     def __init__(self, file_path: str, database_size=0.5,
                  n_dimensions=25, train_prop=0.7, ds_size_override=None):
+        """
+
+        :param file_path:
+        :param database_size:
+        :param n_dimensions:
+        :param train_prop:
+        :param ds_size_override:
+        """
         self.base_dataset = None
         self.database_size = database_size
         self.train_prop = train_prop
@@ -27,12 +35,21 @@ class SVMVectorizer:
         self.scaler = StandardScaler()
 
     def load_data(self, file_path):
+        """
+
+        :param file_path:
+        :return:
+        """
         with open(file_path, 'r') as fp:
             temp = json.load(fp)
         random.shuffle(temp)
         self.base_dataset = temp[:math.floor(len(temp) * self.database_size)]
 
     def transform_sentiment(self):
+        """
+
+        :return:
+        """
         dataset_size = len(self.base_dataset) if self.ds_size_override is None else self.ds_size_override
 
         for i in range(0, dataset_size):
@@ -45,6 +62,10 @@ class SVMVectorizer:
         return self
 
     def vectorize_dataset(self):
+        """
+
+        :return:
+        """
         self.corpus_training['corpus'] = self.vectorizer.fit_transform(
             self.corpus_training['corpus'],
             self.corpus_training['y']
@@ -53,6 +74,10 @@ class SVMVectorizer:
         return self
 
     def scale_dataset(self):
+        """
+
+        :return:
+        """
         self.corpus_training['corpus'] = self.scaler.fit_transform(
             self.corpus_training['corpus'],
             self.corpus_training['y']
