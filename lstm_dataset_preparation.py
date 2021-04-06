@@ -4,9 +4,8 @@ import numpy as np
 from tqdm import tqdm
 from svm.classifier import SVMClassifier
 from svm.vectorizer import SVMVectorizer
-from sys import getsizeof
 
-dataset_path = r'../../unvectorized.p'
+dataset_path = r'../lstm_data/unvectorized.p'
 classifier_path = r'../fitted_classifiers/svm_classifier_100_stemmed.p'
 vectorizer_path = r'../fitted_classifiers/svm_vectorizer_100_stemmed.p'
 
@@ -53,7 +52,10 @@ with open(new_classification_dataset_path, 'wb+') as fp:
 
 for i in tqdm(range(0, len(vectorized_dataset))):
     for j in range(0, len(vectorized_dataset[i])):
-        vectorized_dataset[i][j] = np.append(vectorized_dataset[i][j], classified_dataset2[i][j])
+        vectorized_dataset[i][j] = np.concatenate(
+            (vectorized_dataset[i][j], classified_dataset2[i][j]),
+            dtype=np.float32
+        )
 
 with open(new_concat_dataset_path, 'wb+') as fp:
     pickle.dump(vectorized_dataset, fp)

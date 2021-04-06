@@ -23,12 +23,12 @@ class LSTMNetwork(nn.Module):
         self.input_dim = input_dim
         self._dtype = _dtype
         self.hidden_state = (
-            torch.zeros((self.n_layers, self.seq_len, self.n_hidden), dtype=_dtype),
-            torch.zeros((self.n_layers, self.seq_len, self.n_hidden), dtype=_dtype)
+            torch.zeros((self.n_layers, self.seq_len, self.n_hidden), dtype=self._dtype),
+            torch.zeros((self.n_layers, self.seq_len, self.n_hidden), dtype=self._dtype)
         )
         self.cell_state = (
-            torch.zeros((self.n_layers, self.seq_len, self.n_hidden), dtype=_dtype),
-            torch.zeros((self.n_layers, self.seq_len, self.n_hidden), dtype=_dtype)
+            torch.zeros((self.n_layers, self.seq_len, self.n_hidden), dtype=self._dtype),
+            torch.zeros((self.n_layers, self.seq_len, self.n_hidden), dtype=self._dtype)
         )
         self.linear = nn.Linear(in_features=hidden_dim, out_features=output_dim)
 
