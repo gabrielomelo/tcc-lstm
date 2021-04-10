@@ -42,8 +42,7 @@ class CoronaVirusPredictor(nn.Module):
 
     @staticmethod
     def create_sequences(data, _seq_length):
-        xs = []
-        ys = []
+        xs, ys = [], []
 
         for i in range(len(data) - _seq_length - 1):
             x = data[i:(i + _seq_length)]
@@ -122,16 +121,10 @@ if __name__ == "__main__":
         np.expand_dims(predictions, axis=0)
     ).flatten()
 
-    predicted_index = pd.date_range(
-        start=daily_cases.index[-1],
-        periods=DAYS_TO_PREDICT + 1,
-        closed='right'
-    )
-    predicted_cases = pd.Series(data=predicted_cases, index=predicted_index)
+    print(predicted_cases)
 
-    plt.plot(predicted_cases, label='Predicted Daily Cases')
-    plt.legend()
-    plt.show()
+    predicted_index = pd.date_range(start=daily_cases.index[-1], periods=DAYS_TO_PREDICT + 1, closed='right')
+    predicted_cases = pd.Series(data=predicted_cases, index=predicted_index)
 
     plt.plot(daily_cases, label='Historical Daily Cases')
     plt.plot(predicted_cases, label='Predicted Daily Cases')

@@ -5,7 +5,7 @@ import numpy as np
 
 class LSTMNetwork(nn.Module):
     def __init__(self, input_dim: int, hidden_dim: int, num_layers: int,
-                 _dropout=0.5, output_dim=1, _dtype=torch.float32):
+                 _dropout=0.5, output_dim=1, _dtype=torch.float32, device='cpu'):
         """
         LSTMNetwork implementation using pytorch framework
         :param input_dim:
@@ -31,6 +31,7 @@ class LSTMNetwork(nn.Module):
             torch.zeros((self.n_layers, self.seq_len, self.n_hidden), dtype=self._dtype)
         )
         self.linear = nn.Linear(in_features=hidden_dim, out_features=output_dim)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, data: np.array):
         """
