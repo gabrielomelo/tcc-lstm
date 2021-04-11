@@ -53,7 +53,7 @@ class CoronaVirusPredictor(nn.Module):
         return np.array(xs), np.array(ys)
 
     @staticmethod
-    def train_model(_model, train_data, train_labels, test_data=None, test_labels=None, num_epochs=60, _lr=1e-3):
+    def train_model(_model, train_data, train_labels, test_data=None, test_labels=None, num_epochs=60, _lr=0.001):
         loss_fn = torch.nn.MSELoss(reduction='sum')
         optimiser = torch.optim.Adam(_model.parameters(), lr=_lr)
         _train_hist = np.zeros(num_epochs)
@@ -79,6 +79,7 @@ class CoronaVirusPredictor(nn.Module):
             optimiser.zero_grad()
             loss.backward()
             optimiser.step()
+
         return _model.eval(), _train_hist, test_hist
 
 
