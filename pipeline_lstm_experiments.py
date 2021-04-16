@@ -1,14 +1,48 @@
 from sklearn.preprocessing import StandardScaler
 from torch import nn
 import torch
+import pandas as pd
 import numpy as np
 
-print(torch.cuda.is_available())
+data_path = 'C:/Users/Zuzu/Desktop/tcc/fullPipeline/lstm_data/sentiment_classification_twitter_100_stemmed.p'
+labels_path = 'C:/Users/Zuzu/Desktop/tcc/fullPipeline/lstm_data/converted_labels_twitter_100_stemmed.p'
+
+n_users = 20000
+seq_len = 5
+train_prop = 0.7
+
+dataset = pd.read_pickle(data_path)
+labels = pd.read_pickle(labels_path)
+
+merged_data = {
+    'x': [],
+    'y': []
+}
+
+train_data = {
+    'x': [],
+    'y': []
+}
+
+test_data = {
+    'x': [],
+    'y': []
+}
+
+for i in range(0, len(dataset)):
+    if(len(dataset[i]) >= seq_len):
+        merged_data['x'].append(dataset[i])
+        merged_data['y'].append(labels[i])
+
+for i in range(0, len(merged_data['x'])):
+    if (i + 1) / len(merged_data['x']) <= train_prop:
+        train_data['x'].append(merged_data['x'][i])
+        train_data['y'].append(merged_data['y'][i])
+    else:
+        test_data['x'].append(merged_data['x'][i])
+        test_data['y'].append(merged_data['y'][i])
 
 rnn = nn.LSTM(input_size=5, hidden_size=10, num_layers=4, dropout=0).cuda()
-
-n_users = 200000
-seq_len = 10
 
 input = np.random.randn(n_users, seq_len, 5)
 scaler = StandardScaler()
