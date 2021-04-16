@@ -7,7 +7,7 @@ print(torch.cuda.is_available())
 
 rnn = nn.LSTM(input_size=5, hidden_size=10, num_layers=4, dropout=0).cuda()
 
-n_users = 200000
+n_users = 20000
 seq_len = 10
 
 input = np.random.randn(n_users, seq_len, 5)

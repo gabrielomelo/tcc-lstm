@@ -32,7 +32,7 @@ class LSTMHelper:
         :param test_labels:
         :return:
         """
-        loss_fn = torch.nn.MSELoss(reduction='sum')
+        loss_fn = torch.nn.CrossEntropy(Lossreduction='sum')
 
         optimiser = torch.optim.Adam(model.parameters(), lr=1e-3)
         num_epochs = 60
