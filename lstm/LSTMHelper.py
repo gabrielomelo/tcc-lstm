@@ -1,5 +1,7 @@
 import numpy as np
 import torch
+import tqdm
+
 from lstm.LSTMNetwork import LSTMNetwork
 from sklearn.preprocessing import MinMaxScaler
 
@@ -59,11 +61,40 @@ class LSTMHelper:
             print(f'Epoch {t} train loss: {loss.item()}')
 
         train_hist[t] = loss.item()
-
         optimiser.zero_grad()
-
         loss.backward()
-
         optimiser.step()
-
         return model.eval(), train_hist, test_hist
+
+    @staticmethod
+    def create_sequences(corpus: list, labels: list, seq_len: int) -> tuple:
+        """
+
+        :param labels:
+        :param corpus:
+        :param seq_len:
+        :return: all data (data and labels) dictionary with
+        """
+        xs, ys = [], []
+
+        for i in tqdm.tqdm(range(0, len(corpus))):
+            if len(corpus[i]) >= seq_len:
+                tweet_sequences = []
+                for j in range(len(corpus[i]) - seq_len - 1):
+                    tweet_sequences.append(
+                        corpus[i][j:(j + seq_len)]
+                    )
+                xs.append(tweet_sequences)
+                ys.append(labels[i])
+
+        return xs, ys
+
+    @staticmethod
+    def split_training_dataset(all_data: dict, training_proportion: float) -> tuple:
+        """
+
+        :param all_data:
+        :param training_proportion:
+        :return:
+        """
+        pass
