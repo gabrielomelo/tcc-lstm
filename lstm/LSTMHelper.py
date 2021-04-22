@@ -3,7 +3,7 @@ import torch
 import tqdm
 
 from lstm.LSTMNetwork import LSTMNetwork
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 
 class LSTMHelper:
@@ -11,22 +11,60 @@ class LSTMHelper:
         pass
 
     @staticmethod
-    def get_scaler(data: np.array, labels: np.array, data_range=(0, 1)):
+    def get_scaler(data: np.array, data_range=None):
         """
 
         :param data: 2D numpy array containing the training data
-        :param labels: 2D numpy array containing the training data labels
         :param data_range: data range tuple
         :return:
         """
-        scaler = MinMaxScaler(feature_range=data_range)
-        scaler.fit(data, labels)
-        return scaler
+        if data_range is not None:
+            return MinMaxScaler(feature_range=data_range).fit(data)
+        return StandardScaler().fit(data)
 
     @staticmethod
-    def train(model: LSTMNetwork, train_data, train_labels, test_data=None, test_labels=None):
+    def prepare_data(data: np.ndarray, labels: np.ndarray, scaler, train_proportion=0.7):
+        """
+        Transform the dataset into a series of pytorch tensors, it also scale and divide the data according
+        to the training proportion.
+        :param labels:
+        :param data:
+        :param scaler:
+        :param train_proportion:
+        :return:
+        """
+        if len(data) != len(labels):
+            raise Exception('The dimensions between the data and labels are different, please fix it.')
+
+        rnn_input = []
+        train_data, train_labels = [], []
+        test_data, test_labels = [], []
+
+        for user_corpus in tqdm.tqdm(data[:100]):
+            tweet_sequences = []
+            for sequence in user_corpus:
+                tweet_sequences.append(scaler.transform(sequence))
+            rnn_input.append(tweet_sequences)
+
+        rnn_input = [torch.from_numpy(np.array(user_corpus, dtype=np.float32)).cuda() for user_corpus in rnn_input]
+
+        for i in range(0, len(rnn_input)):
+            if i/len(rnn_input) > train_proportion:
+                test_data.append(rnn_input[i])
+                test_labels.append(labels[i])
+            else:
+                train_data.append(rnn_input[i])
+                train_labels.append(labels[i])
+
+        return train_data, torch.Tensor(train_labels).cuda(), test_data, torch.Tensor(test_labels).cuda()
+
+    @staticmethod
+    def train(model: LSTMNetwork, train_data, train_labels, num_epochs,
+              test_data=None, test_labels=None, learning_rate=0.001):
         """
         train a LSTMNetwork object
+        :param learning_rate:
+        :param num_epochs:
         :param model:
         :param train_data:
         :param train_labels:
@@ -34,36 +72,36 @@ class LSTMHelper:
         :param test_labels:
         :return:
         """
-        loss_fn = torch.nn.CrossEntropy(Lossreduction='sum')
+        loss_fn = torch.nn.MSELoss().cuda()
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+        train_hist, test_hist = [], []
 
-        optimiser = torch.optim.Adam(model.parameters(), lr=1e-3)
-        num_epochs = 60
+        for t in tqdm.tqdm(range(0, num_epochs)):
+            epoch_predictions = []
+            for u in range(len(train_data)):
+                model.reset_hidden_state()
+                epoch_predictions.append(model(train_data[u]).item())
 
-        train_hist = np.zeros(num_epochs)
-        test_hist = np.zeros(num_epochs)
+            loss = loss_fn(torch.tensor(epoch_predictions, requires_grad=True).cuda().float(), train_labels.float())
+            train_hist.append(loss.item())
 
-        for t in range(num_epochs):
-            model.reset_hidden_state()
+            if test_data is not None:
+                epoch_test_predictions = []
+                for u in range(len(test_data)):
+                    with torch.no_grad():
+                        epoch_test_predictions.append(model(test_data[u]).item())
+                test_loss = loss_fn(
+                    torch.tensor(epoch_test_predictions, requires_grad=True).cuda().float(), test_labels.float()
+                )
+                test_hist.append(test_loss.item())
+                print(f'Epoch {t} train loss: {loss.item()}. Test loss: {test_loss.item()}')
+            else:
+                print(f'Epoch {t} train loss: {loss.item()}')
 
-        y_prediction = model(train_data)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-        loss = loss_fn(y_prediction.float(), train_labels)
-
-        if test_data is not None:
-            with torch.no_grad():
-                y_test_prediction = model(test_data)
-                test_loss = loss_fn(y_test_prediction.float(), test_labels)
-                test_hist[t] = test_loss.item()
-
-        if t % 10 == 0:
-            print(f'Epoch {t} train loss: {loss.item()} test loss: {test_loss.item()}')
-        elif t % 10 == 0:
-            print(f'Epoch {t} train loss: {loss.item()}')
-
-        train_hist[t] = loss.item()
-        optimiser.zero_grad()
-        loss.backward()
-        optimiser.step()
         return model.eval(), train_hist, test_hist
 
     @staticmethod
@@ -78,23 +116,14 @@ class LSTMHelper:
         xs, ys = [], []
 
         for i in tqdm.tqdm(range(0, len(corpus))):
-            if len(corpus[i]) >= seq_len:
+            if len(corpus[i]) > seq_len:
                 tweet_sequences = []
                 for j in range(len(corpus[i]) - seq_len - 1):
                     tweet_sequences.append(
                         corpus[i][j:(j + seq_len)]
                     )
-                xs.append(tweet_sequences)
-                ys.append(labels[i])
+                if tweet_sequences:
+                    xs.append(tweet_sequences)
+                    ys.append(labels[i])
 
         return xs, ys
-
-    @staticmethod
-    def split_training_dataset(all_data: dict, training_proportion: float) -> tuple:
-        """
-
-        :param all_data:
-        :param training_proportion:
-        :return:
-        """
-        pass

@@ -1,50 +1,51 @@
 import torch
 import torch.nn as nn
-import numpy as np
 
 
 class LSTMNetwork(nn.Module):
-    def __init__(self, input_dim: int, hidden_dim: int, num_layers: int,
-                 _dropout=0.5, output_dim=1, _dtype=torch.float32, device='cpu'):
+    def __init__(self, _input_size: int, _seq_len: int, _hidden_dim: int,
+                 _num_layers: int, _dropout=0.5, _dtype=torch.float32):
         """
         LSTMNetwork implementation using pytorch framework
-        :param input_dim:
-        :param hidden_dim:
-        :param num_layers:
+        :param _input_size:
+        :param _seq_len:
+        :param _hidden_dim:
+        :param _num_layers:
         :param _dropout:
-        :param output_dim:
         :param _dtype:
         """
         super(LSTMNetwork, self).__init__()
-        self.lstm = nn.LSTM(
-            input_size=input_dim, hidden_size=hidden_dim, num_layers=num_layers, dropout=_dropout
-        )
-        self.hidden_dim = hidden_dim
-        self.input_dim = input_dim
-        self._dtype = _dtype
+        self.input_size = _input_size
+        self.seq_len = _seq_len
+        self.hidden_size = _hidden_dim
+        self.n_layers = _num_layers
+        self.dtype = _dtype
         self.hidden_state = (
-            torch.zeros((self.n_layers, self.seq_len, self.n_hidden), dtype=self._dtype),
-            torch.zeros((self.n_layers, self.seq_len, self.n_hidden), dtype=self._dtype)
+            torch.zeros((self.n_layers, self.seq_len, self.hidden_size)).cuda(),
+            torch.zeros((self.n_layers, self.seq_len, self.hidden_size)).cuda()
         )
-        self.cell_state = (
-            torch.zeros((self.n_layers, self.seq_len, self.n_hidden), dtype=self._dtype),
-            torch.zeros((self.n_layers, self.seq_len, self.n_hidden), dtype=self._dtype)
-        )
-        self.linear = nn.Linear(in_features=hidden_dim, out_features=output_dim)
-        self.sigmoid = nn.Sigmoid()
+        self.lstm = nn.LSTM(
+            input_size=self.input_size, hidden_size=self.hidden_size, num_layers=_num_layers
+        ).cuda()
+        self.linear_hidden = nn.Linear(in_features=self.hidden_size, out_features=1).cuda()
+        self.linear_tweet_layer = nn.Linear(in_features=self.seq_len, out_features=1).cuda()
+        self.sigmoid = nn.Sigmoid().cuda()
 
-    def forward(self, data: np.array):
+    def forward(self, data: torch.Tensor) -> torch.Tensor:
         """
-        forward data into the network and return the prediction
+        Forward data into the network and return the prediction
+        :param data:
         :return:
         """
-        lstm_out, self.hidden_state = self.lstm(
-            data.view(len(data), self.seq_len, -1),
-            (self.hidden_state, self.cell_state)
-        )
-        last_time_step = lstm_out.view(self.seq_len, len(data), self.n_hidden)[-1]
+        lstm_out, self.hidden_state = self.lstm(data, self.hidden_state)
+        
+        tweet_layer = torch.squeeze(self.linear_hidden(lstm_out)).cuda()
+        
+        sequence_layer = torch.flatten(self.linear_tweet_layer(tweet_layer)).cuda()
+        
+        linear_sequence_layer = nn.Linear(in_features=len(data), out_features=1).cuda()
 
-        return self.linear(last_time_step)
+        return self.sigmoid(linear_sequence_layer(sequence_layer))
 
     def reset_hidden_state(self):
         """
@@ -52,6 +53,6 @@ class LSTMNetwork(nn.Module):
         :return:
         """
         self.hidden_state = (
-            torch.zeros((self.n_layers, self.seq_len, self.n_hidden), dtype=self._dtype),
-            torch.zeros((self.n_layers, self.seq_len, self.n_hidden), dtype=self._dtype)
+            torch.zeros((self.n_layers, self.seq_len, self.hidden_size)).cuda(),
+            torch.zeros((self.n_layers, self.seq_len, self.hidden_size)).cuda()
         )
