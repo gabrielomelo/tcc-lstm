@@ -51,52 +51,36 @@ class LSTMHelper:
                 train_data.append(rnn_input[i])
                 train_labels.append(labels[i])
 
-        return (
-            torch.from_numpy(np.array(train_data, dtype=np.float32)).cuda(),
-            torch.Tensor(train_labels).cuda(),
-            torch.from_numpy(np.array(test_data, dtype=np.float32)).cuda(),
-            torch.Tensor(test_labels).cuda()
-        )
+        return np.array(train_data, dtype=np.float32), train_labels, np.array(test_data, dtype=np.float32), test_labels
 
     @staticmethod
-    def train(model: LSTMNetwork, train_data, train_labels,
-              num_epochs, test_data=None, test_labels=None, learning_rate=0.001):
+    def train(model: LSTMNetwork, train_data: torch.Tensor, train_labels: torch.Tensor, num_epochs, _lr=0.001):
         """
         train a LSTMNetwork object
-        :param learning_rate:
+        :param _lr:
         :param num_epochs:
         :param model:
         :param train_data:
         :param train_labels:
-        :param test_data:
-        :param test_labels:
         :return:
         """
         loss_fn = torch.nn.MSELoss().cuda()
-        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-        train_hist, test_hist = [], []
+        optimizer = torch.optim.Adam(model.parameters(), lr=_lr)
+        train_hist = np.zeros(num_epochs)
 
         for t in tqdm.tqdm(range(0, num_epochs)):
             model.reset_hidden_state()
             prediction = model(train_data)
 
             loss = loss_fn(prediction.float(), train_labels.float())
-            train_hist.append(loss.item())
-
-            if test_data is not None:
-                with torch.no_grad():
-                    test_prediction = model(test_data)
-                    test_loss = loss_fn(test_prediction.float(), test_labels.float())
-                test_hist.append(test_loss.item())
-                print(f'Epoch {t} train loss: {loss.item()}. Test loss: {test_loss.item()}')
-            else:
-                print(f'Epoch {t} train loss: {loss.item()}')
+            train_hist[t] = loss.item()
+            print(f'Epoch {t} train loss: {loss.item()}')
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-        return model.eval(), train_hist, test_hist
+        return model.eval(), train_hist
 
     @staticmethod
     def create_sequences(corpus: list, labels: list, seq_len: int) -> tuple:
