@@ -21,8 +21,8 @@ class LSTMNetwork(nn.Module):
         self.n_layers = _num_layers
         self.dtype = _dtype
         self.hidden_state = (
-            torch.zeros((self.n_layers, self.seq_len, self.hidden_size)).cuda(),
-            torch.zeros((self.n_layers, self.seq_len, self.hidden_size)).cuda()
+            torch.randn((self.n_layers, self.seq_len, self.hidden_size)).cuda(),
+            torch.randn((self.n_layers, self.seq_len, self.hidden_size)).cuda()
         )
         self.lstm = nn.LSTM(
             input_size=self.input_size, hidden_size=self.hidden_size, num_layers=_num_layers
@@ -38,14 +38,11 @@ class LSTMNetwork(nn.Module):
         :return:
         """
         lstm_out, self.hidden_state = self.lstm(data, self.hidden_state)
-        
         tweet_layer = torch.squeeze(self.linear_hidden(lstm_out)).cuda()
-        
-        sequence_layer = torch.flatten(self.linear_tweet_layer(tweet_layer)).cuda()
-        
-        linear_sequence_layer = nn.Linear(in_features=len(data), out_features=1).cuda()
 
-        return self.sigmoid(linear_sequence_layer(sequence_layer))
+        return self.sigmoid(
+            torch.flatten(self.linear_tweet_layer(tweet_layer)).cuda()
+        )
 
     def reset_hidden_state(self):
         """
@@ -53,6 +50,6 @@ class LSTMNetwork(nn.Module):
         :return:
         """
         self.hidden_state = (
-            torch.zeros((self.n_layers, self.seq_len, self.hidden_size)).cuda(),
-            torch.zeros((self.n_layers, self.seq_len, self.hidden_size)).cuda()
+            torch.randn((self.n_layers, self.seq_len, self.hidden_size)).cuda(),
+            torch.randn((self.n_layers, self.seq_len, self.hidden_size)).cuda()
         )

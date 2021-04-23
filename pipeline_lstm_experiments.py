@@ -1,10 +1,14 @@
 import pandas as pd
 import itertools
+import os
+import pickle
 from lstm.LSTMHelper import LSTMHelper
 from lstm.LSTMNetwork import LSTMNetwork
 
 data_path = '../lstm_data/sentiment_classification_twitter_100_stemmed.p'
 labels_path = '../lstm_data/converted_labels_twitter_100_stemmed.p'
+finished_ds_path = '../lstm_data/converted_labels_twitter_100_stemmed.p'
+
 seq_len = 5
 train_prop = 0.7
 input_size = 2
@@ -17,7 +21,6 @@ dataset = pd.read_pickle(data_path)
 labels = pd.read_pickle(labels_path)
 
 all_data, all_labels = LSTMHelper.create_sequences(dataset, labels, seq_len)
-
 scaler = LSTMHelper.get_scaler(list(itertools.chain(*dataset)))
 
 train_data, train_labels, _test_data, _test_labels = LSTMHelper.prepare_data(

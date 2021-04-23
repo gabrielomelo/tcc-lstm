@@ -23,7 +23,7 @@ class LSTMHelper:
         return StandardScaler().fit(data)
 
     @staticmethod
-    def prepare_data(data: np.ndarray, labels: np.ndarray, scaler, train_proportion=0.7):
+    def prepare_data(data, labels, scaler, train_proportion=0.7):
         """
         Transform the dataset into a series of pytorch tensors, it also scale and divide the data according
         to the training proportion.
@@ -36,31 +36,31 @@ class LSTMHelper:
         if len(data) != len(labels):
             raise Exception('The dimensions between the data and labels are different, please fix it.')
 
-        rnn_input = []
         train_data, train_labels = [], []
         test_data, test_labels = [], []
+        rnn_input = []
 
-        for user_corpus in tqdm.tqdm(data[:100]):
-            tweet_sequences = []
-            for sequence in user_corpus:
-                tweet_sequences.append(scaler.transform(sequence))
-            rnn_input.append(tweet_sequences)
-
-        rnn_input = [torch.from_numpy(np.array(user_corpus, dtype=np.float32)).cuda() for user_corpus in rnn_input]
+        for sequence in tqdm.tqdm(data):
+            rnn_input.append(scaler.transform(sequence))
 
         for i in range(0, len(rnn_input)):
-            if i/len(rnn_input) > train_proportion:
+            if i / len(rnn_input) > train_proportion:
                 test_data.append(rnn_input[i])
                 test_labels.append(labels[i])
             else:
                 train_data.append(rnn_input[i])
                 train_labels.append(labels[i])
 
-        return train_data, torch.Tensor(train_labels).cuda(), test_data, torch.Tensor(test_labels).cuda()
+        return (
+            torch.from_numpy(np.array(train_data, dtype=np.float32)).cuda(),
+            torch.Tensor(train_labels).cuda(),
+            torch.from_numpy(np.array(test_data, dtype=np.float32)).cuda(),
+            torch.Tensor(test_labels).cuda()
+        )
 
     @staticmethod
-    def train(model: LSTMNetwork, train_data, train_labels, num_epochs,
-              test_data=None, test_labels=None, learning_rate=0.001):
+    def train(model: LSTMNetwork, train_data, train_labels,
+              num_epochs, test_data=None, test_labels=None, learning_rate=0.001):
         """
         train a LSTMNetwork object
         :param learning_rate:
@@ -77,22 +77,16 @@ class LSTMHelper:
         train_hist, test_hist = [], []
 
         for t in tqdm.tqdm(range(0, num_epochs)):
-            epoch_predictions = []
-            for u in range(len(train_data)):
-                model.reset_hidden_state()
-                epoch_predictions.append(model(train_data[u]).item())
+            model.reset_hidden_state()
+            prediction = model(train_data)
 
-            loss = loss_fn(torch.tensor(epoch_predictions, requires_grad=True).cuda().float(), train_labels.float())
+            loss = loss_fn(prediction.float(), train_labels.float())
             train_hist.append(loss.item())
 
             if test_data is not None:
-                epoch_test_predictions = []
-                for u in range(len(test_data)):
-                    with torch.no_grad():
-                        epoch_test_predictions.append(model(test_data[u]).item())
-                test_loss = loss_fn(
-                    torch.tensor(epoch_test_predictions, requires_grad=True).cuda().float(), test_labels.float()
-                )
+                with torch.no_grad():
+                    test_prediction = model(test_data)
+                    test_loss = loss_fn(test_prediction.float(), test_labels.float())
                 test_hist.append(test_loss.item())
                 print(f'Epoch {t} train loss: {loss.item()}. Test loss: {test_loss.item()}')
             else:
@@ -113,9 +107,10 @@ class LSTMHelper:
         :param seq_len:
         :return: all data (data and labels) dictionary with
         """
+        temp_xs, temp_ys = [], []
         xs, ys = [], []
 
-        for i in tqdm.tqdm(range(0, len(corpus))):
+        for i in range(0, len(corpus)):
             if len(corpus[i]) > seq_len:
                 tweet_sequences = []
                 for j in range(len(corpus[i]) - seq_len - 1):
@@ -123,7 +118,12 @@ class LSTMHelper:
                         corpus[i][j:(j + seq_len)]
                     )
                 if tweet_sequences:
-                    xs.append(tweet_sequences)
-                    ys.append(labels[i])
+                    temp_xs.append(tweet_sequences)
+                    temp_ys.append(labels[i])
+
+        for i in range(0, len(temp_xs)):
+            for j in range(0, len(temp_xs[i])):
+                xs.append(temp_xs[i][j])
+                ys.append(temp_ys[i])
 
         return xs, ys
