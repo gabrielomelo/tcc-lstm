@@ -1,14 +1,14 @@
 import numpy as np
 import torch
+from torch.utils.data import DataLoader, Dataset
 import tqdm
 
-from lstm.LSTMNetwork import LSTMNetwork
+from lstm.depression_detector import DepressionDetector
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 
 class LSTMHelper:
-    def __init__(self):
-        pass
+    BATCH_QTY_TENSORBOARD = 100
 
     @staticmethod
     def get_scaler(data: np.array, data_range=None):
@@ -54,33 +54,56 @@ class LSTMHelper:
         return np.array(train_data, dtype=np.float32), train_labels, np.array(test_data, dtype=np.float32), test_labels
 
     @staticmethod
-    def train(model: LSTMNetwork, train_data: torch.Tensor, train_labels: torch.Tensor, num_epochs, _lr=0.001):
+    def train(model: DepressionDetector, train_dataset: Dataset, batch_size, num_epochs, writer, _lr=0.001):
         """
         train a LSTMNetwork object
+        :param writer:
+        :param batch_size:
+        :param train_dataset:
         :param _lr:
         :param num_epochs:
         :param model:
-        :param train_data:
-        :param train_labels:
         :return:
         """
-        loss_fn = torch.nn.MSELoss().cuda()
+        loss_fn = torch.nn.MSELoss(reduction='mean').cuda()
         optimizer = torch.optim.Adam(model.parameters(), lr=_lr)
-        train_hist = np.zeros(num_epochs)
+        train_data_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
 
-        for t in tqdm.tqdm(range(0, num_epochs)):
-            model.reset_hidden_state()
-            prediction = model(train_data)
+        model.train()
+        running_loss_epoch = 0.0
+        running_loss_batches = 0.0
+        for epoch in range(0, num_epochs):
+            for batch, data in enumerate(train_data_loader, 0):
+                inputs, labels = data
+                if inputs.shape[0] == batch_size:
+                    inputs, labels = inputs.cuda(), labels.cuda()
+                    out = model(inputs)
+                    loss = loss_fn(out.float(), labels.float())
+                    optimizer.zero_grad()
+                    loss.backward()
+                    optimizer.step()
+                    running_loss_batches += loss.item()
+                    running_loss_epoch += loss.item()
+                    print(f'Epoch {epoch+1} batch {batch + 1} train loss: {loss.item()}')
 
-            loss = loss_fn(prediction.float(), train_labels.float())
-            train_hist[t] = loss.item()
-            print(f'Epoch {t} train loss: {loss.item()}')
+                    if batch % LSTMHelper.BATCH_QTY_TENSORBOARD == LSTMHelper.BATCH_QTY_TENSORBOARD - 1:
+                        writer.add_scalar(f'training loss per {LSTMHelper.BATCH_QTY_TENSORBOARD} batches',
+                                          running_loss_batches / LSTMHelper.BATCH_QTY_TENSORBOARD,
+                                          epoch * len(train_data_loader) + batch)
+                        running_loss_batches = 0.0
 
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+            writer.add_scalar('training loss per epoch',
+                              running_loss_epoch,
+                              epoch)
+            running_loss_epoch = 0.0
 
-        return model.eval(), train_hist
+        return model.eval()
+
+    @staticmethod
+    def evaluate():
+        with torch.no_grad():
+            pass
+        pass
 
     @staticmethod
     def create_sequences(corpus: list, labels: list, seq_len: int) -> tuple:
