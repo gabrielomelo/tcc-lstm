@@ -1,14 +1,16 @@
+import time
+
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
 import tqdm
 
 from lstm.depression_detector import DepressionDetector
+from lstm.detector_metrics import DetectorMetrics
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 
 class LSTMHelper:
-    BATCH_QTY_TENSORBOARD = 100
 
     @staticmethod
     def get_scaler(data: np.array, data_range=None):
@@ -54,9 +56,13 @@ class LSTMHelper:
         return np.array(train_data, dtype=np.float32), train_labels, np.array(test_data, dtype=np.float32), test_labels
 
     @staticmethod
-    def train(model: DepressionDetector, train_dataset: Dataset, batch_size, num_epochs, writer, _lr=0.001):
+    def train(model: DepressionDetector, train_dataset: Dataset, batch_size,
+              num_epochs, writer, _lr=0.001, tensorboard_batch=100, reduction_loss='mean', _shuffle=True):
         """
         train a LSTMNetwork object
+        :param _shuffle:
+        :param reduction_loss:
+        :param tensorboard_batch:
         :param writer:
         :param batch_size:
         :param train_dataset:
@@ -65,9 +71,9 @@ class LSTMHelper:
         :param model:
         :return:
         """
-        loss_fn = torch.nn.MSELoss(reduction='mean').cuda()
+        loss_fn = torch.nn.MSELoss(reduction=reduction_loss).cuda()
         optimizer = torch.optim.Adam(model.parameters(), lr=_lr)
-        train_data_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+        train_data_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=_shuffle)
 
         model.train()
         running_loss_epoch = 0.0
@@ -84,11 +90,11 @@ class LSTMHelper:
                     optimizer.step()
                     running_loss_batches += loss.item()
                     running_loss_epoch += loss.item()
-                    print(f'Epoch {epoch+1} batch {batch + 1} train loss: {loss.item()}')
+                    print(f'Epoch {epoch + 1} batch {batch + 1} train loss: {loss.item()}')
 
-                    if batch % LSTMHelper.BATCH_QTY_TENSORBOARD == LSTMHelper.BATCH_QTY_TENSORBOARD - 1:
-                        writer.add_scalar(f'training loss per {LSTMHelper.BATCH_QTY_TENSORBOARD} batches',
-                                          running_loss_batches / LSTMHelper.BATCH_QTY_TENSORBOARD,
+                    if batch % tensorboard_batch == tensorboard_batch - 1:
+                        writer.add_scalar(f'training loss per {tensorboard_batch} batches',
+                                          running_loss_batches / tensorboard_batch,
                                           epoch * len(train_data_loader) + batch)
                         running_loss_batches = 0.0
 
@@ -100,10 +106,32 @@ class LSTMHelper:
         return model.eval()
 
     @staticmethod
-    def evaluate():
-        with torch.no_grad():
-            pass
-        pass
+    def evaluate(model: DepressionDetector, test_dataset: Dataset, batch_size: int, reduction_loss: str) -> tuple:
+        """
+        evaluate the trained model using f1, accuracy, precision and recall metrics.
+        :param reduction_loss:
+        :param model:
+        :param test_dataset:
+        :param batch_size:
+        :return:
+        """
+        test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+        model.eval()
+        start_time = time.time()
+        predictions, test_labels = [], []
+
+        for batch, data in enumerate(test_data_loader, 0):
+            inputs, labels = data
+            if inputs.shape[0] == batch_size:
+                inputs = inputs.cuda()
+                with torch.no_grad():
+                    predictions.extend(model(inputs).tolist())
+                    test_labels.extend(labels.tolist())
+                print(f'Batch {batch + 1} with size {batch_size}')
+
+        return model, \
+               DetectorMetrics(predictions, test_labels).eval(), \
+               (time.time() - start_time)
 
     @staticmethod
     def create_sequences(corpus: list, labels: list, seq_len: int) -> tuple:
