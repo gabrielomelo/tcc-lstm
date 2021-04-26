@@ -52,6 +52,6 @@ class DepressionDetector(nn.Module):
         :return:
         """
         return (
-            torch.zeros((self.n_layers, self.batch_size, self.hidden_size)).cuda(),
-            torch.zeros((self.n_layers, self.batch_size, self.hidden_size)).cuda()
+            torch.randn((self.n_layers, self.batch_size, self.hidden_size)).cuda(),
+            torch.randn((self.n_layers, self.batch_size, self.hidden_size)).cuda()
         )

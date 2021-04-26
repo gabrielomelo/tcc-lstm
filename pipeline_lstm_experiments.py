@@ -3,34 +3,38 @@ import torch
 import pickle
 import itertools
 import pandas as pd
+from math import floor
 from torch.utils.tensorboard import SummaryWriter
 from lstm.lstm_helper import LSTMHelper
 from lstm.depression_detector import DepressionDetector
 from lstm.depression_dataset import DepressionDataset
 
-data_path = '../lstm_experiments/data/sentiment_classification_twitter_100_stemmed.p'
+data_path = '../lstm_experiments/data/converted_vectorized_twitter_100_stemmed.p'
 labels_path = '../lstm_experiments/data/converted_labels_twitter_100_stemmed.p'
-finished_ds_train_path = '../lstm_experiments/inputs/lstm_train_dataset-sentiment.p'
-finished_ds_test_path = '../lstm_experiments/inputs/lstm_test_dataset-sentiment.p'
-model_save_path = '../lstm_experiments/models/sentiment/lstm_model_trained_sentiment_adam-mean_100-epochs_hidden-6_lr0001_batch-100000_run6'
-run_name_logging_dir = '../lstm_experiments/runs/sentiment/lstm_model_trained_sentiment_adam-mean_100-epochs_hidden-6_lr0001_batch-100000_run6'
-seq_len = 5
+finished_ds_train_path = '../lstm_experiments/inputs/lstm_train_dataset-textual.p'
+finished_ds_test_path = '../lstm_experiments/inputs/lstm_test_dataset-textual.p'
+model_save_path = '../lstm_experiments/models/textual/lstm_model_trained_textual_hidden-20_100-epochs_lr0001_batch-1000_run1'
+run_name_logging_dir = '../lstm_experiments/runs/textual/lstm_model_trained_textual_hidden-20_100-epochs_lr0001_batch-1000_run1'
+seq_len = 3
 train_prop = 0.7
-input_size = 2
-_hidden_size = 6
+input_size = 300
+_hidden_size = 20
 n_layers = 4
 learning_rate = 0.0001
-batch_size = 100000
+batch_size = 1000
 num_epochs = 100
-_tensorboard_batch = 10
-_reduction_loss = 'sum'
+_tensorboard_batch = 100
+dataset_perc = 0.5
+_reduction_loss = 'mean'
 shuffle = True
-just_eval = True
+just_eval = False
 
 if not just_eval:
 
     if not os.path.isfile(finished_ds_train_path):
         dataset, labels = pd.read_pickle(data_path), pd.read_pickle(labels_path)
+        if dataset_perc < 1.0:
+            dataset, labels = dataset[0: floor(len(dataset)*dataset_perc)], labels[0: floor(len(labels)*dataset_perc)]
         all_data, all_labels = LSTMHelper.create_sequences(dataset, labels, seq_len)
         scaler = LSTMHelper.get_scaler(list(itertools.chain(*dataset)))
 
