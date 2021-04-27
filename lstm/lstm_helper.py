@@ -81,13 +81,9 @@ class LSTMHelper:
         model.train()
         running_loss_epoch = 0.0
         running_loss_batches = 0.0
-        if last_epoch_count != 0:
-            last_epoch = last_epoch_count + 1
-        else:
-            last_epoch = last_epoch_count
+        last_epoch = last_epoch_count + 1 if last_epoch_count != 0 else last_epoch_count
 
         for epoch in range(0, num_epochs):
-            last_epoch += epoch
             try:
                 for batch, data in enumerate(train_data_loader, 0):
                     inputs, labels = data
@@ -108,10 +104,9 @@ class LSTMHelper:
                                               last_epoch * len(train_data_loader) + batch)
                             running_loss_batches = 0.0
 
-                writer.add_scalar('training loss per epoch',
-                                  running_loss_epoch,
-                                  last_epoch)
+                writer.add_scalar('training loss per epoch', running_loss_epoch, last_epoch)
                 running_loss_epoch = 0.0
+                last_epoch += 1
             except KeyboardInterrupt:
                 return model, optimizer, last_epoch
         return model, optimizer, last_epoch

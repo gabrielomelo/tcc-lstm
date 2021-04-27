@@ -8,16 +8,16 @@ from lstm.depression_dataset import DepressionDataset
 
 finished_ds_train_path = '../lstm_experiments/inputs/lstm_train_dataset-textual.p'
 finished_ds_test_path = '../lstm_experiments/inputs/lstm_test_dataset-textual.p'
-model_save_path = '../lstm_experiments/models/textual/lstm_model_trained_textual_hidden-20_10-epochs_lr0001_batch-1000_run1'
-run_name_logging_dir = '../lstm_experiments/runs/textual/lstm_model_trained_textual_hidden-20_10-epochs_lr0001_batch-1000_run1'
+model_save_path = '../lstm_experiments/models/textual/lstm_model_trained_textual_hidden-300_1000-epochs_lr0001_batch-20000_run1'
+run_name_logging_dir = '../lstm_experiments/runs/textual/lstm_model_trained_textual_hidden-300_1000-epochs_lr0001_batch-20000_run1'
 seq_len = 3
 input_size = 300
-_hidden_size = 20
+_hidden_size = 300
 n_layers = 4
 last_epoch = 0
 learning_rate = 0.0001
-batch_size = 10000
-num_epochs = 2
+batch_size = 20000
+num_epochs = 1000
 _tensorboard_batch = 10
 reduction_loss = 'mean'
 shuffle = True
@@ -39,7 +39,7 @@ if not just_eval:
         optimizer.load_state_dict(state['optimizer'])
 
         model, optimizer, last_epoch = LSTMHelper.train(
-            rnn_lstm, optimizer, train_dataset, state['batch_size'], state['num_epochs'], writer,
+            rnn_lstm, optimizer, train_dataset, state['batch_size'], num_epochs, writer,
             state['reduction_loss'], tensorboard_batch=state['tensorboard_batch'],
             _shuffle=state['shuffle'], last_epoch_count=state['last_epoch']
         )
@@ -61,7 +61,6 @@ if not just_eval:
             'n_layers': n_layers,
             'last_epoch': last_epoch,
             'batch_size': batch_size,
-            'num_epochs': num_epochs,
             'tensorboard_batch': _tensorboard_batch,
             'reduction_loss': 'mean',
             'shuffle': shuffle,
