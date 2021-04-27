@@ -3,15 +3,13 @@ import torch.nn as nn
 
 
 class DepressionDetector(nn.Module):
-    def __init__(self, _input_size: int, _seq_len: int, _hidden_dim: int,
-                 _num_layers: int, batch_size: int, _dropout=0.5):
+    def __init__(self, _input_size: int, _seq_len: int, _hidden_dim: int, _num_layers: int, batch_size: int):
         """
         LSTMNetwork implementation using pytorch framework
         :param _input_size:
         :param _seq_len:
         :param _hidden_dim:
         :param _num_layers:
-        :param _dropout:
         """
         super(DepressionDetector, self).__init__()
         self.input_size = _input_size
@@ -24,8 +22,7 @@ class DepressionDetector(nn.Module):
             input_size=self.input_size,
             hidden_size=self.hidden_size,
             num_layers=self.n_layers,
-            batch_first=True,
-            dropout=_dropout
+            batch_first=True
         ).cuda()
         self.linear_hidden = nn.Linear(in_features=self.hidden_size, out_features=1).cuda()
         self.linear_tweet_layer = nn.Linear(in_features=self.seq_len, out_features=1).cuda()

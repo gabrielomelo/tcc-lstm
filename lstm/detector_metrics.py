@@ -1,3 +1,6 @@
+from tqdm import tqdm
+import numpy as np
+
 
 class DetectorMetrics:
     def __init__(self, prediction: list, target: list, positive=1.0, negative=0.0, threshold=None):
@@ -18,6 +21,23 @@ class DetectorMetrics:
         else:
             self.threshold = threshold
         self.set_variables()
+
+    def optimize_f1(self, _step=0.001, _range=(0.0, 0.5)):
+        """
+        optimize the threshold to maximise the f1-score
+        :return:
+        """
+        greater_f1, threshold = 0, 0
+        thresholds = np.arange((_range[0] + _step), (_range[1] + _step), _step)
+        for t in tqdm(thresholds):
+            self.threshold = t
+            self.set_variables().eval()
+            if greater_f1 < self.f1:
+                greater_f1 = self.f1
+                threshold = t
+
+        self.threshold = threshold
+        return self
 
     def threshold_fn(self, value: float) -> bool:
         """
@@ -41,8 +61,13 @@ class DetectorMetrics:
                 self.true_negative += 1
             elif not self.threshold_fn(self.prediction[j]) and self.target[j] == self.positive:
                 self.false_negative += 1
+        return self
 
     def set_threshold(self):
+        """
+
+        :return:
+        """
         acc, occur = 0.0, 0
         for j in range(0, len(self.prediction)):
             if self.target[j] == 1.0:

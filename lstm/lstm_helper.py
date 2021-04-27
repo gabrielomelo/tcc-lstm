@@ -56,66 +56,77 @@ class LSTMHelper:
         return np.array(train_data, dtype=np.float32), train_labels, np.array(test_data, dtype=np.float32), test_labels
 
     @staticmethod
-    def train(model: DepressionDetector, train_dataset: Dataset, batch_size,
-              num_epochs, writer, _lr=0.001, tensorboard_batch=100, reduction_loss='mean', _shuffle=True):
+    def train(
+            model: DepressionDetector, optimizer: torch.optim.Adam,
+            train_dataset: Dataset, batch_size, num_epochs, writer,
+            reduction_loss, tensorboard_batch=100, _shuffle=True, last_epoch_count=0
+    ):
         """
         train a LSTMNetwork object
+        :param optimizer:
+        :param last_epoch_count:
         :param _shuffle:
         :param reduction_loss:
         :param tensorboard_batch:
         :param writer:
         :param batch_size:
         :param train_dataset:
-        :param _lr:
         :param num_epochs:
         :param model:
         :return:
         """
         loss_fn = torch.nn.MSELoss(reduction=reduction_loss).cuda()
-        optimizer = torch.optim.Adam(model.parameters(), lr=_lr)
         train_data_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=_shuffle)
 
         model.train()
         running_loss_epoch = 0.0
         running_loss_batches = 0.0
+        if last_epoch_count != 0:
+            last_epoch = last_epoch_count + 1
+        else:
+            last_epoch = last_epoch_count
+
         for epoch in range(0, num_epochs):
-            for batch, data in enumerate(train_data_loader, 0):
-                inputs, labels = data
-                if inputs.shape[0] == batch_size:
-                    inputs, labels = inputs.cuda(), labels.cuda()
-                    out = model(inputs)
-                    loss = loss_fn(out.float(), labels.float())
-                    optimizer.zero_grad()
-                    loss.backward()
-                    optimizer.step()
-                    running_loss_batches += loss.item()
-                    running_loss_epoch += loss.item()
-                    print(f'Epoch {epoch + 1} batch {batch + 1} train loss: {loss.item()}')
+            last_epoch += epoch
+            try:
+                for batch, data in enumerate(train_data_loader, 0):
+                    inputs, labels = data
+                    if inputs.shape[0] == batch_size:
+                        inputs, labels = inputs.cuda(), labels.cuda()
+                        out = model(inputs)
+                        loss = loss_fn(out.float(), labels.float())
+                        optimizer.zero_grad()
+                        loss.backward()
+                        optimizer.step()
+                        running_loss_batches += loss.item()
+                        running_loss_epoch += loss.item()
+                        print(f'Epoch {epoch + 1} batch {batch + 1} train loss: {loss.item()}')
 
-                    if batch % tensorboard_batch == tensorboard_batch - 1:
-                        writer.add_scalar(f'training loss per {tensorboard_batch} batches',
-                                          running_loss_batches / tensorboard_batch,
-                                          epoch * len(train_data_loader) + batch)
-                        running_loss_batches = 0.0
+                        if batch % tensorboard_batch == tensorboard_batch - 1:
+                            writer.add_scalar(f'training loss per {tensorboard_batch} batches',
+                                              running_loss_batches / tensorboard_batch,
+                                              last_epoch * len(train_data_loader) + batch)
+                            running_loss_batches = 0.0
 
-            writer.add_scalar('training loss per epoch',
-                              running_loss_epoch,
-                              epoch)
-            running_loss_epoch = 0.0
-
-        return model.eval()
+                writer.add_scalar('training loss per epoch',
+                                  running_loss_epoch,
+                                  last_epoch)
+                running_loss_epoch = 0.0
+            except KeyboardInterrupt:
+                return model, optimizer, last_epoch
+        return model, optimizer, last_epoch
 
     @staticmethod
-    def evaluate(model: DepressionDetector, test_dataset: Dataset, batch_size: int, reduction_loss: str) -> tuple:
+    def evaluate(model: DepressionDetector, test_dataset: Dataset, batch_size: int, threshold=None) -> tuple:
         """
         evaluate the trained model using f1, accuracy, precision and recall metrics.
-        :param reduction_loss:
+        :param threshold:
         :param model:
         :param test_dataset:
         :param batch_size:
         :return:
         """
-        test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+        test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
         model.eval()
         start_time = time.time()
         predictions, test_labels = [], []
@@ -130,7 +141,7 @@ class LSTMHelper:
                 print(f'Batch {batch + 1} with size {batch_size}')
 
         return model, \
-               DetectorMetrics(predictions, test_labels).eval(), \
+               DetectorMetrics(predictions, test_labels, threshold=threshold).eval(), \
                (time.time() - start_time)
 
     @staticmethod
