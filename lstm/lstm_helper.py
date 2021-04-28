@@ -4,6 +4,8 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
 import tqdm
+from random import shuffle
+from math import floor
 
 from lstm.depression_detector import DepressionDetector
 from lstm.detector_metrics import DetectorMetrics
@@ -138,6 +140,58 @@ class LSTMHelper:
         return model, \
                DetectorMetrics(predictions, test_labels, threshold=threshold).eval(), \
                (time.time() - start_time)
+
+    @staticmethod
+    def balance_dataset(_sequences, _labels, _dataset_perc, _classes_prop) -> tuple:
+        """
+
+        :param _classes_prop:
+        :param _sequences:
+        :param _labels:
+        :param _dataset_perc:
+        :return:
+        """
+        if len(_labels) != len(_sequences):
+            raise Exception("dataset with different size")
+
+        ones, zeros, temp_all, temp_data, temp_labels = [], [], [], [], []
+        for i in range(0, len(_labels)):
+            if _labels[i] == 1:
+                ones.append((_sequences[i], _labels[i]))
+            else:
+                zeros.append((_sequences[i], _labels[i]))
+
+        dataset_real_size = floor(len(_labels) * _dataset_perc)
+        one_minimal_count = floor(dataset_real_size * _classes_prop[0])
+        zero_minimal_count = floor(dataset_real_size * _classes_prop[1])
+
+        if one_minimal_count <= len(ones) and zero_minimal_count <= len(zeros):
+            shuffle(ones), shuffle(zeros)
+            temp_all.extend(ones[0: one_minimal_count])
+            temp_all.extend(zeros[0: zero_minimal_count])
+            shuffle(temp_all)
+        else:
+            lower_count = 0
+            if one_minimal_count >= len(ones):
+                if zero_minimal_count >= len(zeros):
+                    lower_count = len(ones) if len(ones) < len(zeros) else len(zeros)
+                else:
+                    lower_count = len(ones)
+            elif zero_minimal_count >= len(zeros):
+                if one_minimal_count >= len(ones):
+                    lower_count = len(ones) if len(ones) < len(zeros) else len(zeros)
+                else:
+                    lower_count = len(zeros)
+            shuffle(ones), shuffle(zeros)
+            temp_all.extend(ones[0: lower_count])
+            temp_all.extend(zeros[0: lower_count])
+            shuffle(temp_all)
+
+        for t in temp_all:
+            temp_data.append(t[0]),
+            temp_labels.append(t[1])
+
+        return temp_data, temp_labels
 
     @staticmethod
     def create_sequences(corpus: list, labels: list, seq_len: int) -> tuple:
