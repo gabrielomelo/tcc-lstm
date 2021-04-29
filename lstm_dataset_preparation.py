@@ -2,16 +2,16 @@ import pickle
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from svm.classifier import SVMClassifier
-from svm.vectorizer import SVMVectorizer
+from nlp_lib.svm.classifier import SVMClassifier
+from nlp_lib.svm.vectorizer import SVMVectorizer
 
-dataset_path = r'../lstm_data/unvectorized.p'
-classifier_path = r'../fitted_classifiers/svm_classifier_100_stemmed.p'
-vectorizer_path = r'../fitted_classifiers/svm_vectorizer_100_stemmed.p'
+dataset_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\data\unvectorized.p'
+classifier_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\svm_experiments\svm_classifier_300_stemmed.p'
+vectorizer_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\svm_experiments\svm_vectorizer_300_stemmed.p'
 
-vectorized_dataset_path = r'../lstm_data/converted_vectorized_twitter_100_stemmed.p'
-new_classification_dataset_path = r'../lstm_data/sentiment_classification_twitter_100_stemmed.p'
-new_concat_dataset_path = r'../lstm_data/concat_twitter_dataset_100_stemmed.p'
+vectorized_dataset_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\data\textual_twitter_stemmed.p'
+new_classification_dataset_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\data\sentiment_twitter_stemmed.p'
+new_concat_dataset_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\data\concat_twitter_stemmed.p'
 vectorized_dataset = pd.read_pickle(vectorized_dataset_path)
 
 

@@ -1,7 +1,7 @@
 import pickle
 import itertools
 import pandas as pd
-from lstm.lstm_helper import LSTMHelper
+from nlp_lib.lstm.lstm_helper import LSTMHelper
 
 data_path = '../lstm_experiments/data/converted_vectorized_twitter_100_stemmed.p'
 labels_path = '../lstm_experiments/data/converted_labels_twitter_100_stemmed.p'

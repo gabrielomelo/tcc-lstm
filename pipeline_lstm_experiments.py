@@ -2,9 +2,9 @@ import os
 import torch
 import pandas as pd
 from torch.utils.tensorboard import SummaryWriter
-from lstm.lstm_helper import LSTMHelper
-from lstm.depression_detector import DepressionDetector
-from lstm.depression_dataset import DepressionDataset
+from nlp_lib.lstm.lstm_helper import LSTMHelper
+from nlp_lib.lstm.depression_detector import DepressionDetector
+from nlp_lib.lstm.depression_dataset import DepressionDataset
 
 finished_ds_train_path = '../lstm_experiments/inputs/lstm_train_dataset-textual.p'
 finished_ds_test_path = '../lstm_experiments/inputs/lstm_test_dataset-textual.p'
@@ -89,13 +89,3 @@ print('Revocação: ', metrics.recall)
 print('Acurácia: ', metrics.accuracy)
 print('F1 Score: ', metrics.f1)
 print('Threshold: ', metrics.threshold)
-
-"""
-print('Oimizando o threshold para maximizar o F1')
-metrics.optimize_f1().eval()
-print('Precisão: ', metrics.precision)
-print('Revocação: ', metrics.recall)
-print('Acurácia: ', metrics.accuracy)
-print('F1 Score: ', metrics.f1)
-print('Threshold: ', metrics.threshold)
-"""

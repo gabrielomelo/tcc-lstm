@@ -3,8 +3,8 @@ import pandas as pd
 from tqdm import tqdm
 
 dataset_path = '../lstm_data/vectorized.p'
-converted_dataset_path = '../lstm_data/converted_vectorized_twitter_100_stemmed.p'
-converted_dataset_labels_path = '../lstm_data/converted_labels_twitter_100_stemmed.p'
+converted_dataset_path = '../lstm_data/textual_twitter_stemmed.p'
+converted_dataset_labels_path = '../lstm_data/labels_twitter_stemmed.p'
 dataset = pd.read_pickle(dataset_path)
 
 xs, ys = [], []
