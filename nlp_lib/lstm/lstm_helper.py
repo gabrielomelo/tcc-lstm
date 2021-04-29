@@ -7,8 +7,8 @@ import tqdm
 from random import shuffle
 from math import floor
 
-from nlp_lib.lstm import DepressionDetector
-from nlp_lib.lstm import DetectorMetrics
+from nlp_lib.lstm.depression_detector import DepressionDetector
+from nlp_lib.lstm.detector_metrics import DetectorMetrics
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 
