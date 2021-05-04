@@ -6,10 +6,12 @@ from nlp_lib.lstm.lstm_helper import LSTMHelper
 from nlp_lib.lstm.depression_detector import DepressionDetector
 from nlp_lib.lstm.depression_dataset import DepressionDataset
 
-finished_ds_train_path = '../lstm_experiments/inputs/lstm_train_dataset-textual.p'
-finished_ds_test_path = '../lstm_experiments/inputs/lstm_test_dataset-textual.p'
-model_save_path = '../lstm_experiments/models/textual/lstm_model_trained_textual_hidden-300_1000-epochs_lr0001_batch-20000_run1'
-run_name_logging_dir = '../lstm_experiments/runs/textual/lstm_model_trained_textual_hidden-300_1000-epochs_lr0001_batch-20000_run1'
+finished_ds_train_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\run2\inputs\lstm_train_dataset-textual.p'
+finished_ds_test_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\run2\inputs\lstm_test_dataset-textual.p'
+model_save_path = \
+    r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\run2\models\textual\lstm_model_trained_textual_hidden-300_1000-epochs_lr0001_batch-20000'
+run_name_logging_dir = \
+    r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\run2\models\textual\lstm_model_trained_textual_hidden-300_1000-epochs_lr0001_batch-20000_log'
 seq_len = 3
 input_size = 300
 _hidden_size = 300
@@ -21,7 +23,7 @@ num_epochs = 1000
 _tensorboard_batch = 5
 reduction_loss = 'mean'
 shuffle = True
-just_eval = False
+just_eval = True
 _threshold = None
 
 if not just_eval:
@@ -83,9 +85,11 @@ model, metrics, test_time = LSTMHelper.evaluate(
     rnn_lstm, test_dataset, batch_size, threshold=_threshold
 )
 
+metrics.optimize_g_mean().eval()
+
 print('Tempo classificação (segundos): ', test_time)
 print('Precisão: ', metrics.precision)
 print('Revocação: ', metrics.recall)
 print('Acurácia: ', metrics.accuracy)
-print('F1 Score: ', metrics.f1)
+print('F1 Score: ', metrics.f_score)
 print('Threshold: ', metrics.threshold)

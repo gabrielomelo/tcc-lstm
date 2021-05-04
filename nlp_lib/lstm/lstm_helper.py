@@ -123,7 +123,7 @@ class LSTMHelper:
         :param batch_size:
         :return:
         """
-        test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+        test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
         model.eval()
         start_time = time.time()
         predictions, test_labels = [], []
@@ -138,7 +138,7 @@ class LSTMHelper:
                 print(f'Batch {batch + 1} with size {batch_size}')
 
         return model, \
-               DetectorMetrics(predictions, test_labels, threshold=threshold).eval(), \
+               DetectorMetrics(predictions, test_labels, threshold=threshold), \
                (time.time() - start_time)
 
     @staticmethod

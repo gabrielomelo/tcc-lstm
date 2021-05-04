@@ -1,5 +1,7 @@
-from tqdm import tqdm
-import numpy as np
+from math import sqrt
+from sklearn import metrics
+from numpy import argmax
+from matplotlib import pyplot
 
 
 class DetectorMetrics:
@@ -13,30 +15,38 @@ class DetectorMetrics:
         self.accuracy = 0.0
         self.recall = 0.0
         self.precision = 0.0
-        self.f1 = 0.0
+        self.f_score = 0.0
         self.positive = positive
         self.negative = negative
-        if threshold is None:
-            self.set_threshold()
-        else:
-            self.threshold = threshold
-        self.set_variables()
+        self.threshold = threshold
 
-    def optimize_f1(self, _step=0.001, _range=(0.0, 0.5)):
+    def optimize_g_mean(self):
         """
-        optimize the threshold to maximise the f1-score
+        optimize the threshold to maximise the g-mean score (ROC Curve)
         :return:
         """
-        greater_f1, threshold = 0, 0
-        thresholds = np.arange((_range[0] + _step), (_range[1] + _step), _step)
-        for t in tqdm(thresholds):
-            self.threshold = t
-            self.set_variables().eval()
-            if greater_f1 < self.f1:
-                greater_f1 = self.f1
-                threshold = t
-
-        self.threshold = threshold
+        g_means = []
+        fpr, tpr, thresholds = metrics.roc_curve(self.target, self.prediction, pos_label=1)
+        roc_auc = metrics.auc(fpr, tpr)
+        for i in range(len(fpr)):
+            g_means.append(sqrt(tpr[i] * (1 - fpr[i])))
+        pyplot.figure()
+        idx = argmax(g_means)
+        lw = 2
+        print('Best Threshold=%f, G-Mean=%.3f' % (thresholds[idx], g_means[idx]))
+        pyplot.plot(fpr, tpr, color='darkorange', lw=lw, label='ROC curve (area ={0:.2f})'.format(roc_auc))
+        pyplot.scatter(fpr[idx], tpr[idx], marker='o', color='black', label='Best')
+        pyplot.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+        pyplot.xlim([0.0, 1.0])
+        pyplot.ylim([0.0, 1.05])
+        pyplot.xlabel('False Positive Rate')
+        pyplot.ylabel('True Positive Rate')
+        pyplot.title('ROC Curve')
+        pyplot.legend(loc="lower right")
+        pyplot.show()
+        self.threshold = thresholds[idx]
+        self.set_variables()
+        self.eval()
         return self
 
     def threshold_fn(self, value: float) -> bool:
@@ -45,7 +55,7 @@ class DetectorMetrics:
         :param value:
         :return:
         """
-        return value > self.threshold
+        return value >= self.threshold
 
     def set_variables(self):
         """
@@ -63,25 +73,12 @@ class DetectorMetrics:
                 self.false_negative += 1
         return self
 
-    def set_threshold(self):
-        """
-
-        :return:
-        """
-        acc, occur = 0.0, 0
-        for j in range(0, len(self.prediction)):
-            if self.target[j] == 1.0:
-                acc += self.prediction[j]
-                occur += 1
-
-        self.threshold = acc / occur
-
     def eval(self):
         """
 
         :return:
         """
-        return self.set_accuracy().set_recall().set_precision().set_f1_score()
+        return self.set_accuracy().set_recall().set_precision().set_f_score()
 
     def set_accuracy(self):
         """
@@ -117,13 +114,13 @@ class DetectorMetrics:
             self.precision = 0.0
         return self
 
-    def set_f1_score(self):
+    def set_f_score(self):
         """
 
         :return:
         """
         try:
-            self.f1 = 2 * ((self.precision * self.recall) / (self.precision + self.recall))
+            self.f_score = (2 * self.precision * self.recall) / (self.precision + self.recall)
         except ZeroDivisionError:
-            self.f1 = 0.0
+            self.f_score = 0.0
         return self

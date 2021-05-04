@@ -3,10 +3,12 @@ import itertools
 import pandas as pd
 from nlp_lib.lstm.lstm_helper import LSTMHelper
 
-data_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\data\concat_twitter_stemmed.p'
+data_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\data\textual_twitter_stemmed.p'
 labels_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\data\labels_twitter_stemmed.p'
-finished_ds_train_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\inputs\lstm_train_dataset-concat.p'
-finished_ds_test_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\inputs\lstm_test_dataset-concat.p'
+finished_ds_train_path = \
+    r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\run2\inputs\lstm_train_dataset-textual.p'
+finished_ds_test_path = \
+    r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\run2\inputs\lstm_test_dataset-textual.p'
 seq_len = 3
 dataset_perc = 0.5
 train_test_prop = 0.7
