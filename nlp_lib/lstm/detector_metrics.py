@@ -1,7 +1,16 @@
 from math import sqrt
 from sklearn import metrics
 from numpy import argmax
-from matplotlib import pyplot
+import matplotlib
+from matplotlib import pyplot as plt
+
+matplotlib.use("pgf")
+matplotlib.rcParams.update({
+    "pgf.texsystem": "pdflatex",
+    'font.family': 'serif',
+    'text.usetex': True,
+    'pgf.rcfonts': False,
+})
 
 
 class DetectorMetrics:
@@ -30,20 +39,20 @@ class DetectorMetrics:
         roc_auc = metrics.auc(fpr, tpr)
         for i in range(len(fpr)):
             g_means.append(sqrt(tpr[i] * (1 - fpr[i])))
-        pyplot.figure()
+        plt.figure()
         idx = argmax(g_means)
         lw = 2
         print('Best Threshold=%f, G-Mean=%.3f' % (thresholds[idx], g_means[idx]))
-        pyplot.plot(fpr, tpr, color='darkorange', lw=lw, label='ROC curve (area ={0:.2f})'.format(roc_auc))
-        pyplot.scatter(fpr[idx], tpr[idx], marker='o', color='black', label='Best')
-        pyplot.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
-        pyplot.xlim([0.0, 1.0])
-        pyplot.ylim([0.0, 1.05])
-        pyplot.xlabel('False Positive Rate')
-        pyplot.ylabel('True Positive Rate')
-        pyplot.title('ROC Curve')
-        pyplot.legend(loc="lower right")
-        pyplot.show()
+        plt.plot(fpr, tpr, color='darkorange', lw=lw, label='Curva ROC (area ={0:.2f})'.format(roc_auc))
+        plt.scatter(fpr[idx], tpr[idx], marker='o', color='black', label='Melhor Resultado')
+        plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('Especificidade')
+        plt.ylabel('Sensibilidade')
+        plt.title('Curva ROC')
+        plt.legend(loc="lower right")
+        plt.savefig('ROC_Curve2.pgf')
         self.threshold = thresholds[idx]
         self.set_variables()
         self.eval()
