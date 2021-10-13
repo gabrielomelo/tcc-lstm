@@ -6,8 +6,6 @@ from matplotlib import pyplot as plt
 
 matplotlib.use("TkAgg")
 
-
-
 class DetectorMetrics:
     def __init__(self, prediction: list, target: list, positive=1.0, negative=0.0, threshold=None):
         self.prediction = prediction
@@ -48,7 +46,14 @@ class DetectorMetrics:
         plt.title('Curva ROC')
         plt.legend(loc="lower right")
         plt.show()
-        #plt.savefig('ROC_Curve2.pgf')
+        matplotlib.use("pgf")
+        matplotlib.rcParams.update({
+            "pgf.texsystem": "pdflatex",
+            'font.family': 'serif',
+            'text.usetex': True,
+            'pgf.rcfonts': False,
+        })
+        plt.savefig('ROC_Curve2.pgf')
         self.threshold = thresholds[idx]
         self.set_variables()
         self.eval()
