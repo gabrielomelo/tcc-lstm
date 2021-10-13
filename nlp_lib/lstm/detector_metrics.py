@@ -4,13 +4,8 @@ from numpy import argmax
 import matplotlib
 from matplotlib import pyplot as plt
 
-matplotlib.use("pgf")
-matplotlib.rcParams.update({
-    "pgf.texsystem": "pdflatex",
-    'font.family': 'serif',
-    'text.usetex': True,
-    'pgf.rcfonts': False,
-})
+matplotlib.use("TkAgg")
+
 
 
 class DetectorMetrics:
@@ -52,7 +47,8 @@ class DetectorMetrics:
         plt.ylabel('Sensibilidade')
         plt.title('Curva ROC')
         plt.legend(loc="lower right")
-        plt.savefig('ROC_Curve2.pgf')
+        plt.show()
+        #plt.savefig('ROC_Curve2.pgf')
         self.threshold = thresholds[idx]
         self.set_variables()
         self.eval()

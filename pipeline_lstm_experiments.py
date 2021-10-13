@@ -6,12 +6,12 @@ from nlp_lib.lstm.lstm_helper import LSTMHelper
 from nlp_lib.lstm.depression_detector import DepressionDetector
 from nlp_lib.lstm.depression_dataset import DepressionDataset
 
-finished_ds_train_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\run2\inputs\lstm_train_dataset-concat.p'
-finished_ds_test_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\run2\inputs\lstm_test_dataset-concat.p'
+finished_ds_train_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\experiments\lstm\run2\inputs\lstm_train_dataset-concat.p'
+finished_ds_test_path = r'C:\Users\Gabriel\Desktop\tcc-lstm\experiments\lstm\run2\inputs\lstm_test_dataset-concat.p'
 model_save_path = \
-    r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\run2\models\concat\lstm_model_trained_concat_hidden-301_1000-epochs_lr0001_batch-20000'
+    r'C:\Users\Gabriel\Desktop\tcc-lstm\experiments\lstm\run2\models\concat\lstm_model_trained_concat_hidden-301_1000-epochs_lr0001_batch-20000'
 run_name_logging_dir = \
-    r'C:\Users\Gabriel\Desktop\tcc-lstm\lstm_experiments\run2\models\concat\lstm_model_trained_concat_hidden-301_1000-epochs_lr0001_batch-20000_log'
+    r'C:\Users\Gabriel\Desktop\tcc-lstm\experiments\lstm\run2\models\concat\lstm_model_trained_concat_hidden-301_1000-epochs_lr0001_batch-20000_log'
 seq_len = 3
 input_size = 301
 _hidden_size = 300
